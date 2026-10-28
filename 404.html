@@ -60,6 +60,7 @@ svg{width:24px;height:24px;fill:currentColor}
 #zoom{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:9}
 #zoom.on{display:flex}#zoom img{max-width:100%;max-height:100%}
 .pend{opacity:.7}.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000c;padding:8px 14px;border-radius:18px;font-size:14px;display:none;z-index:8}
+.wa{display:none;align-items:center;gap:10px;margin:6px 10px;padding:12px 14px;border-radius:14px;background:#25d366;color:#04210f;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}.wa.on{display:flex}.wa svg{width:24px;height:24px;flex:none;fill:currentColor}
 </style>
 </head>
 <body>
@@ -68,6 +69,7 @@ svg{width:24px;height:24px;fill:currentColor}
   <div id="msgs" aria-live="polite"></div>
   <div class="typing" id="typing"><span class="dots"><i></i><i></i><i></i></span></div>
   <div class="chips" id="chips"></div>
+  <a class="wa" id="wa" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.2.5.1.6 0l.8-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.6-.1 1.2z"/></svg><span>Plano ativado! Toque aqui para falar com a gente no WhatsApp</span></a>
   <div id="emoji"></div>
   <footer>
     <div class="box" id="box">
@@ -188,6 +190,7 @@ async function ler() {
     msgs = r.mensagens;
     pend = pend.filter(p => !p.id || !msgs.some(m => m.id === p.id));
     if (sig !== lastSig) { lastSig = sig; render(r); }
+    const wa = $('wa'); if (r.whatsapp && /^https:\/\/wa\.me\/\d+\?text=/.test(r.whatsapp)) { wa.href = r.whatsapp; wa.classList.add('on'); } else { wa.removeAttribute('href'); wa.classList.remove('on'); }
     if (novasLoja && !firstLoad && document.hidden) { unseen += novasLoja; document.title = `(${unseen}) Nova mensagem • The Best`; bip(); }
   } catch (e) {
     if (e.message === 'SESSAO_CHAT_INVALIDA') { try { localStorage.removeItem(KEY); } catch {} token = null; $('start').classList.remove('hide'); }

@@ -32,6 +32,7 @@ header{display:flex;align-items:center;gap:10px;padding:10px 12px;padding-top:ma
 .pix{margin-top:6px;width:100%;padding:9px;border-radius:8px;background:#0f9d58;font-weight:700;color:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 10px 8px}
 .chip{background:var(--chip);border:1px solid #2f5fa8;border-radius:18px;padding:7px 12px;font-size:14px}
+.chip.ativar{background:#25d366;border-color:#25d366;color:#04210f;font-weight:700;font-size:15px;padding:10px 16px}
 .typing{display:none;padding:2px 12px 4px}.typing.on{display:block}
 .dots{display:inline-flex;gap:4px;background:var(--in);padding:10px 12px;border-radius:12px}
 .dots i{width:7px;height:7px;border-radius:50%;background:var(--sub);animation:d 1.2s infinite}.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
@@ -170,7 +171,14 @@ function render(st) {
 function chips(todas) {
   const el = $('chips'); el.innerHTML = '';
   const ult = todas[todas.length - 1];
-  if (!ult || ult.de === 'cliente' || !ult.texto) return;
+  // Botão "Quero ativar" (Roberto 28/10 21:42): depois que o teste chegou (o robô mandou usuário e senha) e enquanto o
+  // plano não foi pago. Manda o mesmo texto que o cliente digitaria; os planos e o Pix continuam saindo pelo robô da revenda.
+  const teste = todas.some(m => m.de !== 'cliente' && m.texto && /usu[aá]rio/i.test(m.texto) && /senha/i.test(m.texto)
+    && !/renovado com sucesso|ativado com sucesso/i.test(m.texto));
+  const pago = Boolean(lastState && lastState.whatsapp);
+  const ativar = () => { if (!teste || pago) return; const b = document.createElement('button'); b.className = 'chip ativar';
+    b.textContent = '✅ Quero ativar meu plano'; b.onclick = () => enviarTexto('Quero ativar'); el.appendChild(b); };
+  if (!ult || ult.de === 'cliente' || !ult.texto) { if (ult && ult.de !== 'cliente') ativar(); return; }
   const ops = [];
   for (const linha of ult.texto.split('\n')) {
     const m = linha.match(/^\s*\*?(\d{1,2})(?:\uFE0F?\u20E3|\s*[-–—.)]|\s*[:=])\s*\*?\s*(.{1,40})$/);
@@ -180,6 +188,7 @@ function chips(todas) {
   if (/\bPRONTO\b/.test(ult.texto) && !ops.length) ops.push({ v: 'PRONTO', l: 'PRONTO' });
   if (/responda\s+\*?sim\*?/i.test(ult.texto) && !ops.length) { ops.push({ v: 'SIM', l: 'SIM' }); ops.push({ v: 'NÃO', l: 'NÃO' }); }
   for (const o of ops.slice(0, 12)) { const b = document.createElement('button'); b.className = 'chip'; b.textContent = o.l; b.onclick = () => enviarTexto(o.v); el.appendChild(b); }
+  if (!ops.length) ativar();
 }
 
 async function ler() {
@@ -191,7 +200,7 @@ async function ler() {
     msgs = r.mensagens;
     pend = pend.filter(p => !p.id || !msgs.some(m => m.id === p.id));
     if (sig !== lastSig) { lastSig = sig; render(r); }
-    const wa = $('wa'); if (r.whatsapp && /^https:\/\/wa\.me\/\d+\?text=/.test(r.whatsapp)) { wa.href = r.whatsapp; wa.classList.add('on'); let ja = false; try { ja = localStorage.getItem('tb_wa_' + token) === '1'; } catch {} if (!ja) { try { localStorage.setItem('tb_wa_' + token, '1'); } catch {} const sp = wa.querySelector('span'), padrao = sp.textContent; let n = 6; const passo = () => { if (n > 0) { sp.textContent = `Pagamento confirmado! ✅ Aguarde, vamos te levar para o nosso WhatsApp em ${n}…`; n--; setTimeout(passo, 1000); } else { sp.textContent = padrao; location.href = r.whatsapp; } }; passo(); } } else { wa.removeAttribute('href'); wa.classList.remove('on'); }
+    const wa = $('wa'); if (r.whatsapp && /^https:\/\/wa\.me\/\d+\?text=/.test(r.whatsapp)) { wa.href = r.whatsapp; wa.classList.add('on'); lastState = r; document.querySelectorAll('.chip.ativar').forEach(x => x.remove()); let ja = false; try { ja = localStorage.getItem('tb_wa_' + token) === '1'; } catch {} if (!ja) { try { localStorage.setItem('tb_wa_' + token, '1'); } catch {} const sp = wa.querySelector('span'), padrao = sp.textContent; let n = 6; const passo = () => { if (n > 0) { sp.textContent = `Pagamento confirmado! ✅ Aguarde, vamos te levar para o nosso WhatsApp em ${n}…`; n--; setTimeout(passo, 1000); } else { sp.textContent = padrao; location.href = r.whatsapp; } }; passo(); } } else { wa.removeAttribute('href'); wa.classList.remove('on'); }
     if (novasLoja && !firstLoad && document.hidden) { unseen += novasLoja; document.title = `(${unseen}) Nova mensagem • The Best`; bip(); }
   } catch (e) {
     if (e.message === 'SESSAO_CHAT_INVALIDA') { try { localStorage.removeItem(KEY); } catch {} token = null; $('start').classList.remove('hide'); }

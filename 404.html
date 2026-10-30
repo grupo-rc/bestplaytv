@@ -63,6 +63,23 @@ svg{width:24px;height:24px;fill:currentColor}
 .pend{opacity:.7}.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#000c;padding:8px 14px;border-radius:18px;font-size:14px;display:none;z-index:8}
 .wa{display:none;align-items:center;gap:10px;margin:6px 10px;padding:12px 14px;border-radius:14px;background:#25d366;color:#04210f;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}.wa.on{display:flex}.wa svg{width:24px;height:24px;flex:none;fill:currentColor}
 </style>
+<!-- Meta Pixel Code (William, 29/10/2026) -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1661210068875123');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1661210068875123&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 <div id="app">
@@ -311,6 +328,8 @@ $('bStart').onclick = async () => {
       return;
     }
     token = r.token; try { localStorage.setItem(KEY, token); } catch {}
+    // Pixel do Meta (William): conversa iniciada = lead (sem nome nem telefone no evento).
+    try { window.fbq && window.fbq('track', 'Lead'); } catch {}
     $('start').classList.add('hide'); botao(); agendar();
     await enviarTexto('Olá! Gostaria de mais informações.');
   } catch (e) {
